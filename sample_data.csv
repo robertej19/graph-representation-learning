@@ -1,6 +1,10 @@
 name,undergrad,grad,employer,location,hobbies,drinks
-John,MIT,Yale,Google,Colorado,"skiing;hiking",coffee
-Janice,,,Freelancer,California,snowboarding,espresso
+John,MIT,Yale,Google,Colorado,"skiing",espresso
+Janice,,,Freelancer,California,snowboarding,coldbrew
 Alice,Stanford,UC Berkeley,Facebook,California,"cycling;reading",tea
 Bob,Harvard,,Amazon,Massachusetts,"running;cooking",rum
-Charlie,MIT,Harvard,Microsoft,Washington,"skiing;snowboarding",espresso
+Charlie,MIT,Harvard,Google,Washington,"skiing",espresso
+Joe,BC,,Amazon,Massachusetts,"running;cooking",rum
+Chuck,BU,Harvard,Google,Washington,"skiing",espresso
+Aime,BU,,Kohls,Florida,"TV",water
+

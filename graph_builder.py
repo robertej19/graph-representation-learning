@@ -31,7 +31,7 @@ def build_knowledge_graph_from_df(df: pd.DataFrame, df_weights: pd.DataFrame, de
     # Iterate over each person in the DataFrame.
     for idx, row in df.iterrows():
         # Create a unique key for the person using the name and row index.
-        person_key = f"person_{row['name']}_{idx}"
+        person_key = f"{row['name']}_{idx}"
         # Add the person node (store the original name as an attribute).
         G.add_node(person_key, type="person", name=row["name"])
         
@@ -55,7 +55,7 @@ def build_knowledge_graph_from_df(df: pd.DataFrame, df_weights: pd.DataFrame, de
             # For each value in the cell, add a trait node and an edge.
             for v in values:
                 # Namespacing the trait by the column name (so "MIT" under "undergrad" is different from "MIT" elsewhere).
-                trait_node = f"{v}_{col}"
+                trait_node = f"{v}"
                 if not G.has_node(trait_node):
                     G.add_node(trait_node, type=col)
                 # Get the weight from df_weights if defined, else use the default.
