@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Knowledge Graph Representation Learning Example - Basic</title>
+  <style>
+    body {
+      background-color: #2e2e2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1, h2, h3 {
+      color: #f0f0f0;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    table.csv-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    table.csv-table th, table.csv-table td {
+      border: 1px solid #555;
+      padding: 8px;
+      text-align: left;
+    }
+    table.csv-table th {
+      background-color: #444;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      margin-bottom: 40px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Knowledge Graphs</h1>
+    <p>
+      We demonstrate how to use CSV data to build a knowledge graph and then learn node embeddings that capture the similarity between individuals.
+      The process involves two major stages: First, we construct an <strong>undirected knowledge graph</strong> from our CSV files, where nodes represent people and their attributes, and edges capture relationships weighted by their importance.
+      Then we learn vector embeddings for these nodes and reposition the person nodes in 2D space so that similar individuals are physically closer together, representing their mathematically derived relationships.
+    </p>
+    
+    
+    <div class="section">
+      <h2>CSV Data</h2>
+      <p>
+        Here is a sample data set that we will use for the graphs that follow. <code>data.csv</code> contains details such as name, education, employer, location, hobbies, etc.,
+        while <code>weights.csv</code> defines the relative importance of each field.
+      </p>
+      <h3>data.csv</h3>
+      <style type="text/css">
+#T_c931c_row0_col0, #T_c931c_row1_col0, #T_c931c_row2_col0, #T_c931c_row3_col0, #T_c931c_row4_col0, #T_c931c_row5_col0, #T_c931c_row6_col0, #T_c931c_row7_col0 {
+  color: #ff9999;
+}
+#T_c931c_row0_col1, #T_c931c_row1_col1, #T_c931c_row2_col1, #T_c931c_row3_col1, #T_c931c_row4_col1, #T_c931c_row5_col1, #T_c931c_row6_col1, #T_c931c_row7_col1 {
+  color: #99ff99;
+}
+#T_c931c_row0_col2, #T_c931c_row1_col2, #T_c931c_row2_col2, #T_c931c_row3_col2, #T_c931c_row4_col2, #T_c931c_row5_col2, #T_c931c_row6_col2, #T_c931c_row7_col2 {
+  color: #9999ff;
+}
+#T_c931c_row0_col3, #T_c931c_row1_col3, #T_c931c_row2_col3, #T_c931c_row3_col3, #T_c931c_row4_col3, #T_c931c_row5_col3, #T_c931c_row6_col3, #T_c931c_row7_col3 {
+  color: #ffcc99;
+}
+#T_c931c_row0_col4, #T_c931c_row1_col4, #T_c931c_row2_col4, #T_c931c_row3_col4, #T_c931c_row4_col4, #T_c931c_row5_col4, #T_c931c_row6_col4, #T_c931c_row7_col4 {
+  color: #cc99ff;
+}
+#T_c931c_row0_col5, #T_c931c_row1_col5, #T_c931c_row2_col5, #T_c931c_row3_col5, #T_c931c_row4_col5, #T_c931c_row5_col5, #T_c931c_row6_col5, #T_c931c_row7_col5 {
+  color: #99ffcc;
+}
+#T_c931c_row0_col6, #T_c931c_row1_col6, #T_c931c_row2_col6, #T_c931c_row3_col6, #T_c931c_row4_col6, #T_c931c_row5_col6, #T_c931c_row6_col6, #T_c931c_row7_col6 {
+  color: #ff99cc;
+}
+</style>
+<table id="T_c931c" class="csv-table">
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_c931c_level0_col0" class="col_heading level0 col0" >name</th>
+      <th id="T_c931c_level0_col1" class="col_heading level0 col1" >undergrad</th>
+      <th id="T_c931c_level0_col2" class="col_heading level0 col2" >grad</th>
+      <th id="T_c931c_level0_col3" class="col_heading level0 col3" >employer</th>
+      <th id="T_c931c_level0_col4" class="col_heading level0 col4" >location</th>
+      <th id="T_c931c_level0_col5" class="col_heading level0 col5" >hobbies</th>
+      <th id="T_c931c_level0_col6" class="col_heading level0 col6" >drinks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_c931c_level0_row0" class="row_heading level0 row0" >0</th>
+      <td id="T_c931c_row0_col0" class="data row0 col0" >John</td>
+      <td id="T_c931c_row0_col1" class="data row0 col1" >MIT</td>
+      <td id="T_c931c_row0_col2" class="data row0 col2" >Yale</td>
+      <td id="T_c931c_row0_col3" class="data row0 col3" >Google</td>
+      <td id="T_c931c_row0_col4" class="data row0 col4" >Colorado</td>
+      <td id="T_c931c_row0_col5" class="data row0 col5" >skiing</td>
+      <td id="T_c931c_row0_col6" class="data row0 col6" >espresso</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row1" class="row_heading level0 row1" >1</th>
+      <td id="T_c931c_row1_col0" class="data row1 col0" >Janice</td>
+      <td id="T_c931c_row1_col1" class="data row1 col1" >nan</td>
+      <td id="T_c931c_row1_col2" class="data row1 col2" >nan</td>
+      <td id="T_c931c_row1_col3" class="data row1 col3" >Freelancer</td>
+      <td id="T_c931c_row1_col4" class="data row1 col4" >California</td>
+      <td id="T_c931c_row1_col5" class="data row1 col5" >skiing</td>
+      <td id="T_c931c_row1_col6" class="data row1 col6" >coldbrew</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row2" class="row_heading level0 row2" >2</th>
+      <td id="T_c931c_row2_col0" class="data row2 col0" >Alice</td>
+      <td id="T_c931c_row2_col1" class="data row2 col1" >Stanford</td>
+      <td id="T_c931c_row2_col2" class="data row2 col2" >Northeastern</td>
+      <td id="T_c931c_row2_col3" class="data row2 col3" >Facebook</td>
+      <td id="T_c931c_row2_col4" class="data row2 col4" >Massachusetts</td>
+      <td id="T_c931c_row2_col5" class="data row2 col5" >cycling;reading</td>
+      <td id="T_c931c_row2_col6" class="data row2 col6" >tea</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row3" class="row_heading level0 row3" >3</th>
+      <td id="T_c931c_row3_col0" class="data row3 col0" >Bob</td>
+      <td id="T_c931c_row3_col1" class="data row3 col1" >Harvard</td>
+      <td id="T_c931c_row3_col2" class="data row3 col2" >nan</td>
+      <td id="T_c931c_row3_col3" class="data row3 col3" >Amazon</td>
+      <td id="T_c931c_row3_col4" class="data row3 col4" >Massachusetts</td>
+      <td id="T_c931c_row3_col5" class="data row3 col5" >running;cooking</td>
+      <td id="T_c931c_row3_col6" class="data row3 col6" >rum</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row4" class="row_heading level0 row4" >4</th>
+      <td id="T_c931c_row4_col0" class="data row4 col0" >Charlie</td>
+      <td id="T_c931c_row4_col1" class="data row4 col1" >MIT</td>
+      <td id="T_c931c_row4_col2" class="data row4 col2" >Harvard</td>
+      <td id="T_c931c_row4_col3" class="data row4 col3" >Google</td>
+      <td id="T_c931c_row4_col4" class="data row4 col4" >Washington</td>
+      <td id="T_c931c_row4_col5" class="data row4 col5" >skiing</td>
+      <td id="T_c931c_row4_col6" class="data row4 col6" >espresso</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row5" class="row_heading level0 row5" >5</th>
+      <td id="T_c931c_row5_col0" class="data row5 col0" >Joe</td>
+      <td id="T_c931c_row5_col1" class="data row5 col1" >BC</td>
+      <td id="T_c931c_row5_col2" class="data row5 col2" >nan</td>
+      <td id="T_c931c_row5_col3" class="data row5 col3" >Amazon</td>
+      <td id="T_c931c_row5_col4" class="data row5 col4" >Massachusetts</td>
+      <td id="T_c931c_row5_col5" class="data row5 col5" >running;cooking</td>
+      <td id="T_c931c_row5_col6" class="data row5 col6" >rum</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row6" class="row_heading level0 row6" >6</th>
+      <td id="T_c931c_row6_col0" class="data row6 col0" >Chuck</td>
+      <td id="T_c931c_row6_col1" class="data row6 col1" >BU</td>
+      <td id="T_c931c_row6_col2" class="data row6 col2" >Harvard</td>
+      <td id="T_c931c_row6_col3" class="data row6 col3" >Google</td>
+      <td id="T_c931c_row6_col4" class="data row6 col4" >Washington</td>
+      <td id="T_c931c_row6_col5" class="data row6 col5" >skiing</td>
+      <td id="T_c931c_row6_col6" class="data row6 col6" >espresso</td>
+    </tr>
+    <tr>
+      <th id="T_c931c_level0_row7" class="row_heading level0 row7" >7</th>
+      <td id="T_c931c_row7_col0" class="data row7 col0" >Aime</td>
+      <td id="T_c931c_row7_col1" class="data row7 col1" >BU</td>
+      <td id="T_c931c_row7_col2" class="data row7 col2" >nan</td>
+      <td id="T_c931c_row7_col3" class="data row7 col3" >Kohls</td>
+      <td id="T_c931c_row7_col4" class="data row7 col4" >Florida</td>
+      <td id="T_c931c_row7_col5" class="data row7 col5" >TV</td>
+      <td id="T_c931c_row7_col6" class="data row7 col6" >water</td>
+    </tr>
+  </tbody>
+</table>
+
+      <h3>weights.csv</h3>
+      <style type="text/css">
+#T_1c897_row0_col0, #T_1c897_row1_col0, #T_1c897_row2_col0, #T_1c897_row3_col0, #T_1c897_row4_col0, #T_1c897_row5_col0 {
+  color: #ff9999;
+}
+#T_1c897_row0_col1, #T_1c897_row1_col1, #T_1c897_row2_col1, #T_1c897_row3_col1, #T_1c897_row4_col1, #T_1c897_row5_col1 {
+  color: #99ff99;
+}
+</style>
+<table id="T_1c897" class="csv-table">
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_1c897_level0_col0" class="col_heading level0 col0" >field</th>
+      <th id="T_1c897_level0_col1" class="col_heading level0 col1" >weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_1c897_level0_row0" class="row_heading level0 row0" >0</th>
+      <td id="T_1c897_row0_col0" class="data row0 col0" >undergrad</td>
+      <td id="T_1c897_row0_col1" class="data row0 col1" >5.000000</td>
+    </tr>
+    <tr>
+      <th id="T_1c897_level0_row1" class="row_heading level0 row1" >1</th>
+      <td id="T_1c897_row1_col0" class="data row1 col0" >grad</td>
+      <td id="T_1c897_row1_col1" class="data row1 col1" >5.000000</td>
+    </tr>
+    <tr>
+      <th id="T_1c897_level0_row2" class="row_heading level0 row2" >2</th>
+      <td id="T_1c897_row2_col0" class="data row2 col0" >employer</td>
+      <td id="T_1c897_row2_col1" class="data row2 col1" >5.000000</td>
+    </tr>
+    <tr>
+      <th id="T_1c897_level0_row3" class="row_heading level0 row3" >3</th>
+      <td id="T_1c897_row3_col0" class="data row3 col0" >location</td>
+      <td id="T_1c897_row3_col1" class="data row3 col1" >10.000000</td>
+    </tr>
+    <tr>
+      <th id="T_1c897_level0_row4" class="row_heading level0 row4" >4</th>
+      <td id="T_1c897_row4_col0" class="data row4 col0" >hobbies</td>
+      <td id="T_1c897_row4_col1" class="data row4 col1" >3.000000</td>
+    </tr>
+    <tr>
+      <th id="T_1c897_level0_row5" class="row_heading level0 row5" >5</th>
+      <td id="T_1c897_row5_col0" class="data row5 col0" >drinks</td>
+      <td id="T_1c897_row5_col1" class="data row5 col1" >0.500000</td>
+    </tr>
+  </tbody>
+</table>
+
+    </div>
+    
+    <div class="section">
+      <h2>Building the Undirected Knowledge Graph</h2>
+      <p>
+        Using the information from <code>data.csv</code> and <code>weights.csv</code>, we create an undirected graph.
+        In this graph, each person and each trait (e.g., school, employer, hobby) is represented as a node.
+        Edges connect people to their corresponding traits, with the edge weights reflecting the importance of that relationship. The physical distance between nodes is arbitrary, at this point, and closeness can only be understood by examining node degrees. 
+      </p>
+      <iframe src="undirected_graph.html"></iframe>
+    </div>
+    
+    <div class="section">
+      <h2>Learning Node Embeddings & Repositioning</h2>
+      <p>
+        After constructing the graph, we apply a machine learning process to learn vector embeddings for every node.
+        These embeddings capture the similarity between nodes – so that individuals with similar attributes have embeddings that are close together.
+        We then reposition the person nodes using Multi-Dimensional Scaling (MDS), resulting in a 2D layout where similar people are closer.
+        Hovering over any person node in the graph reveals a list of other individuals sorted by similarity scores, with 1 being identical. In this example, where we put a heavy weight on location, we see Alice Joe and Bob, who all live in the same state, are very close together. Aime, who only shares a trait with Chuck, is far away from the pack.
+      </p>
+      <iframe src="embedded_graph.html"></iframe>
+    </div>
+    
+    <div class="section">
+      <h2>Summary</h2>
+      <p>
+        In summary, this visualization demonstrates the complete pipeline:
+        <strong>CSV Data &rarr; Knowledge Graph &rarr; Node Embeddings &rarr; Interactive Visualization</strong>.
+        The undirected graph shows the raw connections between people and their traits,
+        while the embeddings graph provides a refined view based on learned similarities.
+        Hover over nodes to explore the detailed similarity metrics.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

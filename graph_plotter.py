@@ -48,14 +48,18 @@ def adjust_person_positions(pos: dict, G: nx.Graph, min_dist: float = 0.3, itera
         pos[node] = positions[i]
     return pos
 
+import networkx as nx
+import plotly.graph_objects as go
+
 def plot_graph(G: nx.Graph):
     """
     Plots the full undirected knowledge graph using Plotly.
     Uses a spring layout and then adjusts positions of person nodes to spread them out.
+    Person nodes are rendered with larger markers and larger text font,
+    while field nodes are rendered with smaller markers and text.
     """
     # Compute initial layout.
     pos = nx.spring_layout(G, seed=42)
-    # Adjust positions for "person" nodes to reduce overlap.
     pos = adjust_person_positions(pos, G, min_dist=0.3, iterations=50, adjustment_factor=0.1)
     
     # Build edge traces.
@@ -69,45 +73,71 @@ def plot_graph(G: nx.Graph):
     
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
-        line=dict(width=0.5, color='#AAAAAA'),
+        line=dict(width=1, color='#AAAAAA'),
         hoverinfo='none',
         mode='lines'
     )
     
-    # Build node traces.
-    node_x = []
-    node_y = []
-    node_text = []
+    # Separate nodes into "person" and "field" nodes.
+    person_x, person_y, person_text, person_color = [], [], [], []
+    field_x, field_y, field_text, field_color = [], [], [], []
+    
     for node in G.nodes():
         x, y = pos[node]
-        node_x.append(x)
-        node_y.append(y)
-        #node_text.append(f"{node} ({G.nodes[node].get('type', '')})")
-        node_text.append(f"{node}")# ({G.nodes[node].get('type', '')})")
+        degree = len(list(G.adj[node]))
+        node_type = G.nodes[node].get("type", "")
+        if node_type == "person":
+            person_x.append(x)
+            person_y.append(y)
+            # Use the 'name' attribute for person nodes.
+            person_text.append(str(G.nodes[node].get("name", node)))
+            person_color.append(degree)
+        else:
+            field_x.append(x)
+            field_y.append(y)
+            # Display node name along with type for field nodes.
+            #field_text.append(f"{node} ({node_type})")
+            field_text.append(f"{node} ")#({node_type})")
+            field_color.append(degree)
     
-    node_trace = go.Scatter(
-        x=node_x, y=node_y,
+    # Trace for person nodes: larger markers and larger text.
+    person_trace = go.Scatter(
+        x=person_x, y=person_y,
         mode='markers+text',
-        text=node_text,
+        text=person_text,
         textposition="bottom center",
+        textfont=dict(size=20),  # larger text for people
         marker=dict(
-            size=10,
-            color=[],
+            size=25,  # larger markers for people
+            color=person_color,
             colorscale='YlGnBu',
             colorbar=dict(
                 title='Node Degree',
                 titleside='right'
             ),
             line_width=2
-        )
+        ),
+        hoverinfo='text'
     )
     
-    # Color nodes by degree.
-    node_adjacencies = [len(list(G.adj[node])) for node in G.nodes()]
-    node_trace.marker.color = node_adjacencies
+    # Trace for field nodes: smaller markers and text.
+    field_trace = go.Scatter(
+        x=field_x, y=field_y,
+        mode='markers+text',
+        text=field_text,
+        textposition="bottom center",
+        textfont=dict(size=10),  # smaller text for fields
+        marker=dict(
+            size=10,  # smaller markers for field nodes
+            color=field_color,
+            colorscale='YlGnBu',
+            line_width=2
+        ),
+        hoverinfo='text'
+    )
     
-    # Create Plotly figure with a dark gray theme.
-    fig = go.Figure(data=[edge_trace, node_trace],
+    # Create Plotly figure with dark gray theme.
+    fig = go.Figure(data=[edge_trace, person_trace, field_trace],
                     layout=go.Layout(
                         title='Graph Visualization of People and Their Traits',
                         titlefont=dict(size=16, color='white'),
@@ -120,8 +150,9 @@ def plot_graph(G: nx.Graph):
                     ))
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
-
+    
     return fig
+
 # Example usage:
 if __name__ == '__main__':
     # Assuming G is your graph created from build_graph_from_df.

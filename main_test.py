@@ -17,7 +17,7 @@ from plotting_embedded import plot_people_positions, compute_hover_texts
 # Example usage:
 if __name__ == "__main__":
     # --- 0. Load the data ---
-    df = pd.read_csv("sample_data.csv")
+    df = pd.read_csv("data.csv")
     df_weights = pd.read_csv("weights.csv")
     
     # --- 1. Build the Knowledge Graph ---
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     pos_dict, people_nodes, people_embs = reposition_people_by_embeddings(G, e, node_to_idx)
     
     # Adjust positions to avoid overlaps.
-    pos_dict = adjust_positions(pos_dict, min_dist=0.2, iterations=20, adjustment_factor=0.05)
+    #pos_dict = adjust_positions(pos_dict, min_dist=0.2, iterations=20, adjustment_factor=0.05)
     
     # Compute hover texts showing similarity scores.
     hover_texts = compute_hover_texts(people_nodes, people_embs, G, node_to_idx)

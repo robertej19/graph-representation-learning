@@ -141,20 +141,21 @@ def plot_people_positions(pos_dict: dict, G: nx.Graph, people_nodes, hover_texts
         x=node_x, y=node_y,
         mode='markers+text',
         text=[G.nodes[node].get("name", node) for node in people_nodes],
+        textfont=dict(size=20),  # larger text for people
         hovertext=texts,
         hoverinfo='text',
         textposition="bottom center",
         marker=dict(
-            size=15,
-            color='lightblue',
-            line=dict(width=1, color='darkblue')
+            size=25,
+            color='red',
+            line=dict(width=2, color='darkred')
         )
     )
     
     fig = go.Figure(data=[node_trace],
                     layout=go.Layout(
-                        title='People Positioned by Learned Embeddings (Adjusted)',
-                        titlefont=dict(size=16, color='white'),
+                        title='People Positioned Closeness via Learned Embeddings',
+                        titlefont=dict(size=25, color='white'),
                         paper_bgcolor='#2e2e2e',
                         plot_bgcolor='#2e2e2e',
                         font=dict(color='white'),
